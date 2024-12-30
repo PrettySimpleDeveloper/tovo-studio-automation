@@ -2,7 +2,6 @@
 const fs = require("fs");
 const path = require("path");
 const axios = require("axios");
-const cheerio = require("cheerio");
 const { exec } = require("child_process");
 
 // Helper function to create directories
@@ -30,7 +29,8 @@ const downloadVideo = async (url, folderPath, fileName) => {
         }
       );
     });
-    console.log(`Downloaded: ${fileName}`);
+    console.log(`Downloaded: ${fileName}\n`);
+    console.log("-------------------------------------------\n");
   } catch (error) {
     console.error(`Failed to download ${fileName}:`, error.message);
   }
@@ -51,7 +51,7 @@ const processGoogleLink = async (googleLink) => {
 
     const content = response.data;
     const links = [];
-    const lines = content.split("\n");
+    const lines = content.split("\n").filter((line) => line.trim() !== "");
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i].trim();
@@ -91,7 +91,8 @@ const processGoogleLink = async (googleLink) => {
     for (const { link, text } of links) {
       const today = new Date().toISOString().split("T")[0];
 
-      const safeText = text.replace(/[^a-zA-Z0-9-_]/g, "_"); // Sanitize folder name
+      // const safeText = text.replace(/[^a-zA-Z0-9-_]/g, "_"); // Sanitize folder name
+      const safeText = text;
 
       datedFolderPath = path.join(exportFolder, `${today} ${safeText}`);
       createFolder(datedFolderPath);
@@ -103,13 +104,10 @@ const processGoogleLink = async (googleLink) => {
         createFolder(path.join(datedFolderPath, subfolder));
       });
 
-      await downloadVideo(link, videoFolder, safeText);
+      await downloadVideo(link, videoFolder, `${safeText} (OG)`);
     }
 
-    // Save video inside the "4 Video" folder
-    // await downloadVideo(link, path.join(datedFolderPath, "4 Video"), safeText);
-
-    // console.log("All downloads complete!");
+    console.log("All downloads complete!");
   } catch (error) {
     console.error("Error processing Google Link:", error.message);
   }
